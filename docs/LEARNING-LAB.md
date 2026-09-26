@@ -20,7 +20,7 @@ To download approximately one day of completed five-minute Bitcoin candles from 
 .venv/bin/python -m stonkfly.lab run --prices runs/bitcoin.csv --out runs/bitcoin-experiment --steps 12
 ```
 
-These are BTC-USD candles, not BTC-USDC order-book data. The lab defaults to a modeled 0.6% fee per side and 0.05% adverse execution friction per side; these are experimental assumptions, not your actual exchange fee tier. Decisions see only completed candles through the current close and execute at the next open. Warmup means chart history, not neural pre-training. Missing candles retain their actual timestamps; neural time per observation remains fixed. There are no upstream wall-clock cooldowns in this replay: one proposal per candle, a $10 order cap, and a 50% exposure cap are the declared lab policy.
+These are BTC-USD candles, not BTC-USDC order-book data. The lab defaults to a modeled 0.6% fee per side and 0.05% adverse execution friction per side; these are experimental assumptions, not your actual exchange fee tier. Decisions see only completed candles through the current close and execute at the next open. Warmup means chart history, not neural pre-training. The public downloader rejects missing candle intervals; user-supplied CSVs retain their actual timestamps; neural time per observation remains fixed. There are no upstream wall-clock cooldowns in this replay: one proposal per candle, a $10 order cap, and a 50% exposure cap are the declared lab policy.
 
 ## Change reinforcement
 
@@ -58,3 +58,14 @@ Short runs explain the mechanism, not profitability. Compare neural activity and
 ## Public example
 
 See the [reviewed eight-hour results](../results/eight-hour-example/README.md) and [reproduction instructions](REPRODUCING.md). Additional controls are listed separately in the [validation plan](VALIDATION-PLAN.md).
+
+## Hourly replay over the last two weeks
+
+The downloader supports one-hour candles and paginates public requests. It excludes the current incomplete hour and rejects missing intervals. For 336 decisions with a 100-row chart warmup, download 437 candles: 100 warmup rows, the first decision row, and 336 subsequent fill/valuation rows.
+
+```sh
+python -m stonkfly.lab fetch --granularity 3600 --candles 437 --out runs/hourly.csv
+python -m stonkfly.lab run --prices runs/hourly.csv --profiles experiments/loss-sensitive.json --warmup 100 --steps 336 --out runs/hourly-loss-sensitive
+```
+
+This yields 14 market days and 168 simulated neural seconds at the default 500 ms per decision. It also changes the visual chart's history scale: each chart point represents an hour rather than five minutes. Consequently, comparisons with the earlier replay do not isolate decision frequency alone. The recorded source metadata pins the actual UTC window and download time. Use a fresh output path for each fetch/run.

@@ -54,7 +54,7 @@ def main():
         left = [a + b for a, b in zip(left, counts)]
     axes[1].set(
         xlabel="Proposed actions (before execution limits)",
-        title="Feedback changed behavior",
+        title="Proposed actions",
     )
     axes[1].legend(fontsize=8, loc="lower right")
     for axis in axes:

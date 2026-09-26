@@ -136,42 +136,65 @@ def fixture(path, count):
     )
 
 
-def fetch(path):
-    """Public, completed BTC-USD five-minute candles; no account or API key."""
+def fetch(path, *, granularity=300, count=300):
+    """Fetch contiguous completed BTC-USD candles in bounded public requests."""
     import urllib.request
-
-    end = int(time.time() // 300) * 300
-    start = end - 300 * 300
-
-    def iso(t):
-        return datetime.fromtimestamp(t, timezone.utc).isoformat()
-
     from urllib.parse import urlencode
 
-    url = "https://api.exchange.coinbase.com/products/BTC-USD/candles?" + urlencode(
-        {"granularity": 300, "start": iso(start), "end": iso(end)}
-    )
-    req = urllib.request.Request(
-        url, headers={"User-Agent": "FlyTradingLearningLab/1.0"}
-    )
-    with urllib.request.urlopen(req, timeout=30) as response:
-        candles = json.load(response)
-    candles = sorted((c for c in candles if start <= c[0] < end), key=lambda c: c[0])
-    if len(candles) < 4:
-        raise ValueError("Insufficient public candles")
-    with path.open("w", newline="") as f:
+    if granularity not in (60, 300, 900, 3600, 21600, 86400) or count < 4:
+        raise ValueError("Unsupported candle interval or count below four")
+    if path.exists():
+        raise FileExistsError("Choose a new output file")
+    end = int(time.time() // granularity) * granularity
+    start = end - count * granularity
+    candles = {}
+    urls = []
+    # Stay below the API's 300-candle limit, allowing inclusive endpoint behavior.
+    for page_start in range(start, end, 299 * granularity):
+        page_end = min(end, page_start + 299 * granularity)
+        url = "https://api.exchange.coinbase.com/products/BTC-USD/candles?" + urlencode(
+            {
+                "granularity": granularity,
+                "start": datetime.fromtimestamp(page_start, timezone.utc).isoformat(),
+                "end": datetime.fromtimestamp(page_end, timezone.utc).isoformat(),
+            }
+        )
+        req = urllib.request.Request(
+            url, headers={"User-Agent": "FlyTradingLearningLab/1.0"}
+        )
+        with urllib.request.urlopen(req, timeout=30) as response:
+            page = json.load(response)
+        for candle in page:
+            stamp = int(candle[0])
+            if page_start <= stamp < page_end:
+                if D(candle[3]) <= 0 or D(candle[4]) <= 0:
+                    raise ValueError("Invalid public candle price")
+                if stamp in candles and candles[stamp] != candle:
+                    raise ValueError("Conflicting duplicate candle")
+                candles[stamp] = candle
+        urls.append(url)
+    expected = list(range(start, end, granularity))
+    if sorted(candles) != expected:
+        raise ValueError(
+            "Public candle history is incomplete or misaligned; no gaps are filled"
+        )
+    with path.open("x", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(["timestamp", "open", "close"])
-        for c in candles:
-            writer.writerow([c[0], c[3], c[4]])
-    read_prices(path)
+        for stamp in expected:
+            candle = candles[stamp]
+            writer.writerow([stamp, candle[3], candle[4]])
     path.with_suffix(".source.json").write_text(
         json.dumps(
             {
                 "source": "Coinbase Exchange BTC-USD",
-                "url": url,
+                "urls": urls,
                 "retrieved": time.time(),
-                "note": "USD candles; historical bid/ask unavailable; friction modeled",
+                "granularity_seconds": granularity,
+                "candles": count,
+                "start_inclusive": start,
+                "end_exclusive": end,
+                "note": "Completed USD candles; historical bid/ask unavailable; friction modeled",
             },
             indent=2,
         )
@@ -409,6 +432,14 @@ def main(argv=None):
         q.add_argument("--out", type=Path, required=True)
         if command == "fixture":
             q.add_argument("--candles", type=int, default=160)
+        else:
+            q.add_argument("--candles", type=int, default=300)
+            q.add_argument(
+                "--granularity",
+                type=int,
+                default=300,
+                choices=[60, 300, 900, 3600, 21600, 86400],
+            )
     q = sub.add_parser("run")
     q.add_argument("--prices", type=Path, required=True)
     q.add_argument("--profiles", type=Path, default=Path("experiments/profiles.json"))
@@ -458,7 +489,7 @@ def main(argv=None):
         if args.out.exists():
             raise ValueError("Choose a new output file")
         fixture(args.out, args.candles) if args.command == "fixture" else fetch(
-            args.out
+            args.out, granularity=args.granularity, count=args.candles
         )
 
 
