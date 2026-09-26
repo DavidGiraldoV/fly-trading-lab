@@ -2,6 +2,8 @@
 
 # Stonkfly
 
+**Local learning experiment:** Start with [the paper-only laboratory guide](docs/LEARNING-LAB.md) for adjustable reward curves, identical-start comparisons and historical replay. The first measured results are in `runs/bitcoin-first/REPORT.md`.
+
 A fly-connectome simulation that can operate a crypto trading account. Actual neural output, actual Coinbase integration. Profitable learning has not been demonstrated.
 
 **How it works:** Public Coinbase prices become an RGB chart. It stimulates 3,335 brightness inputs and 811 R8 color inputs in the retained **MaleCNS v1.0 graph: 166,700 neurons, 25.6 million connections**. A fixed neural readout proposes buy, sell or hold. A custom **Coinbase AgentKit ActionProvider** checks limits and places spot orders through Coinbase Advanced.

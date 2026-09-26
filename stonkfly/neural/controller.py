@@ -1,6 +1,7 @@
 """Only RGB and engineered reinforcement enter the network. No market policy."""
 
 import hashlib
+import math
 
 import numpy as np
 
@@ -55,21 +56,24 @@ class FlyController:
             self.brain.ids, annotations(self.brain.ids), settings.decoder_threshold_hz
         )
 
-    def observe(self, rgb, reinforcement):
+    def observe(self, rgb, reinforcement, *, pulse_current=None):
         if reinforcement not in ("none", "reward", "aversive"):
             raise ValueError("Unknown reinforcement")
+        current = self.s.pulse_current if pulse_current is None else pulse_current
+        if not math.isfinite(current) or not 0 <= current <= 40:
+            raise ValueError("Pulse current must be finite and between 0 and 40")
         b = self.brain
         counts = np.zeros(b.n, dtype=np.int32)
         wall = 0.0
         remaining = round(self.s.neural_ms / b.dt)
-        pulse = round(self.s.pulse_ms / b.dt) if reinforcement != "none" else 0
+        pulse = round(self.s.pulse_ms / b.dt) if reinforcement != "none" and current else 0
         delivered = 0
         while remaining:
             n = min(remaining, round(self.s.neural_bin_ms / b.dt))
             if pulse:
                 n = min(n, pulse)
             stimulus = (
-                (b.circuit[reinforcement], self.s.pulse_current) if pulse else None
+                (b.circuit[reinforcement], current) if pulse else None
             )
             c, elapsed = b.rgb_step(
                 rgb, n * b.dt, learning=self.s.learning, stimulation=stimulus
@@ -87,6 +91,7 @@ class FlyController:
             "compute_seconds": wall,
             "stimulus": reinforcement,
             "stimulus_ms": delivered * b.dt,
+            "stimulus_current": current if delivered else 0,
             "reward_spikes": int(counts[b.circuit["reward"]].sum()),
             "aversive_spikes": int(counts[b.circuit["aversive"]].sum()),
             "KC_spikes": int(counts[b.circuit["kc"]].sum()),
