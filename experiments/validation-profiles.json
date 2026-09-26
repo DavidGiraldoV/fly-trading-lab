@@ -1,0 +1,7 @@
+{
+  "balanced": {"learning": true, "curve": {"gain": 1, "loss": 1}},
+  "loss-sensitive": {"learning": true, "curve": {"gain": 1, "loss": 2, "loss_power": 1.5}},
+  "gain-sensitive": {"learning": true, "curve": {"gain": 2, "loss": 1}},
+  "no-external-feedback": {"learning": true, "curve": {"gain": 0, "loss": 0}},
+  "frozen": {"learning": false, "curve": {"gain": 1, "loss": 1}}
+}

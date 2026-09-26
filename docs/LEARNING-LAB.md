@@ -54,3 +54,7 @@ For reward-free control, add a profile with `gain: 0, loss: 0`. Endogenous neura
 The buy-and-hold benchmark invests up to the exposure cap immediately; the fly builds exposure in $10 increments. Neither is an exposure-matched causal control. Balances mark BTC at the candle close, with no forced terminal sale or liquidation fee. Drawdown is sampled at candle closes; intrabar losses are not captured. Continuous BTC quantities are used, without exchange lot rounding or order-book depth.
 
 Short runs explain the mechanism, not profitability. Compare neural activity and actions as well as balances: stronger pulses might change spike counts without changing any trade. Do not tune on a period and call that same period a test. Serious learning evaluation needs held-out chronological periods, multiple starts/market windows, shuffled feedback and weight-reset comparisons. A toy sine wave can help diagnose behavior, but useful conditioning is not guaranteed.
+
+## Public example
+
+See the [reviewed eight-hour results](../results/eight-hour-example/README.md) and [reproduction instructions](REPRODUCING.md). Additional controls are listed separately in the [validation plan](VALIDATION-PLAN.md).

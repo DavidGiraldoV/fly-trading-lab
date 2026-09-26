@@ -1,0 +1,74 @@
+[
+  {
+    "profile": "balanced",
+    "final_equity": 99.1115990332733,
+    "return_pct": -0.8884009667267094,
+    "max_drawdown_pct": 1.0796708540018292,
+    "fees": 0.5997120053827193,
+    "trades": 16,
+    "proposals": {
+      "BUY": 29,
+      "SELL": 3,
+      "HOLD": 64
+    },
+    "changed_edges": 3541
+  },
+  {
+    "profile": "loss-sensitive",
+    "final_equity": 99.32318992821746,
+    "return_pct": -0.6768100717825334,
+    "max_drawdown_pct": 1.079353872374767,
+    "fees": 0.420069652700239,
+    "trades": 12,
+    "proposals": {
+      "BUY": 26,
+      "SELL": 1,
+      "HOLD": 69
+    },
+    "changed_edges": 3518
+  },
+  {
+    "profile": "gain-sensitive",
+    "final_equity": 99.19000722315351,
+    "return_pct": -0.8099927768464906,
+    "max_drawdown_pct": 1.0794268708978652,
+    "fees": 0.539227807820658,
+    "trades": 15,
+    "proposals": {
+      "BUY": 46,
+      "SELL": 2,
+      "HOLD": 48
+    },
+    "changed_edges": 3483
+  },
+  {
+    "profile": "frozen",
+    "final_equity": 99.0719991905836,
+    "return_pct": -0.928000809416399,
+    "max_drawdown_pct": 1.1988798133022671,
+    "fees": 0.659139281650926,
+    "trades": 17,
+    "proposals": {
+      "BUY": 48,
+      "SELL": 3,
+      "HOLD": 45
+    },
+    "changed_edges": 0
+  },
+  {
+    "profile": "buy-and-hold",
+    "final_equity": 99.55697132937652,
+    "return_pct": -0.44302867062347673,
+    "max_drawdown_pct": 0.8464470354233384,
+    "fees": 0.29917722525209284,
+    "trades": 1
+  },
+  {
+    "profile": "cash",
+    "final_equity": 100.0,
+    "return_pct": 0.0,
+    "max_drawdown_pct": 0.0,
+    "fees": 0.0,
+    "trades": 0
+  }
+]

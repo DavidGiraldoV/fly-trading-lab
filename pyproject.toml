@@ -15,9 +15,11 @@ dependencies = [
 
 [project.optional-dependencies]
 test = ["pytest==9.1.1"]
+report = ["matplotlib>=3.9,<4"]
 
 [project.scripts]
 stonkfly = "stonkfly.cli:main"
+fly-lab = "stonkfly.lab:main"
 
 [tool.setuptools.packages.find]
 include = ["stonkfly*"]
