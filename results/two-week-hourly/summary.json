@@ -1,0 +1,32 @@
+[
+  {
+    "profile": "loss-sensitive",
+    "final_equity": 101.75787778246023,
+    "return_pct": 1.7578777824602312,
+    "max_drawdown_pct": 2.789538204698457,
+    "fees": 2.44019649671953,
+    "trades": 65,
+    "proposals": {
+      "BUY": 136,
+      "SELL": 19,
+      "HOLD": 181
+    },
+    "changed_edges": 3579
+  },
+  {
+    "profile": "buy-and-hold",
+    "final_equity": 104.11412511803206,
+    "return_pct": 4.114125118032064,
+    "max_drawdown_pct": 2.44950192863817,
+    "fees": 0.29917722525209284,
+    "trades": 1
+  },
+  {
+    "profile": "cash",
+    "final_equity": 100.0,
+    "return_pct": 0.0,
+    "max_drawdown_pct": 0.0,
+    "fees": 0.0,
+    "trades": 0
+  }
+]

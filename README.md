@@ -12,6 +12,8 @@ Four profiles replayed the same eight hours of Bitcoin prices. Stronger-loss fee
 
 **Eight market hours = 96 decisions = 48 seconds of simulated neural activity per profile.** Each decision advances the brain by 500 ms; the intervening five market minutes are not simulated continuously. This is one exploratory window, not an out-of-sample learning result. [Results and limitations](results/eight-hour-example/README.md).
 
+**Two-week hourly follow-up:** the loss-sensitive profile made 336 decisions and ended at **$101.76 (+1.76%)**, versus **$104.11 (+4.11%)** for 50%-allocated buy-and-hold. It executed 65 trades with $2.44 in fees and remained dominated by buying and holding. This overlapping window does not isolate the effect of decision frequency or demonstrate useful learning. [Full report, chart and reproduction inputs](results/two-week-hourly/README.md).
+
 For live prices with simulated trades and adjustable feedback, see the [live-paper guide](docs/LIVE-PAPER.md).
 
 ## Try it

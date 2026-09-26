@@ -1,0 +1,10 @@
+{
+  "loss-sensitive": {
+    "learning": true,
+    "curve": {
+      "gain": 1.0,
+      "loss": 2.0,
+      "loss_power": 1.5
+    }
+  }
+}

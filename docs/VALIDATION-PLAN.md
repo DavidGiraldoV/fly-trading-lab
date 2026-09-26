@@ -1,6 +1,6 @@
 # Further validation — not yet performed
 
-Work to date includes one eight-hour historical Bitcoin window, its one-hour prefix, and a short synthetic-market demonstration. The reviewed public result bundle contains the eight-hour window. All profiles are deterministic comparisons from the same initial brain; these are not independent repeated trials or out-of-sample evaluations.
+Work to date includes one eight-hour historical Bitcoin window, its one-hour prefix, and a short synthetic-market demonstration. The reviewed public result bundles contain the eight-hour window and a [two-week hourly replay](../results/two-week-hourly/README.md) of the loss-sensitive profile. The two-week window overlaps the earlier run and is not the previously unused window proposed below. All profiles are deterministic comparisons from the same initial brain; these are not independent repeated trials or out-of-sample evaluations.
 
 The next experiment should lock the existing settings, select a previously unused chronological market window before inspecting performance, and use `experiments/validation-profiles.json`. That file adds **no-external-feedback**, with learning enabled but both external reinforcement multipliers set to zero. It has not been included in the published measured results.
 

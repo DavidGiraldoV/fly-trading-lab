@@ -9,24 +9,28 @@ import pytest
 
 from experiments.export_results import export
 
-RESULT = Path(__file__).resolve().parents[1] / "results/eight-hour-example"
+RESULTS = Path(__file__).resolve().parents[1] / "results"
 
 
-def test_reviewed_results_are_consistent():
-    manifest = json.loads((RESULT / "manifest.json").read_text())
+@pytest.mark.parametrize(
+    "directory,steps", [("eight-hour-example", 96), ("two-week-hourly", 336)]
+)
+def test_reviewed_results_are_consistent(directory, steps):
+    result = RESULTS / directory
+    manifest = json.loads((result / "manifest.json").read_text())
     assert (
-        hashlib.sha256((RESULT / "prices.csv").read_bytes()).hexdigest()
+        hashlib.sha256((result / "prices.csv").read_bytes()).hexdigest()
         == manifest["market_sha256"]
     )
-    measurements = list(csv.DictReader((RESULT / "measurements.csv").open()))
-    equity = list(csv.DictReader((RESULT / "equity.csv").open()))
-    for summary in json.loads((RESULT / "summary.json").read_text()):
+    measurements = list(csv.DictReader((result / "measurements.csv").open()))
+    equity = list(csv.DictReader((result / "equity.csv").open()))
+    for summary in json.loads((result / "summary.json").read_text()):
         name = summary["profile"]
         assert float(equity[-1][name]) == pytest.approx(summary["final_equity"])
         if "proposals" not in summary:
             continue
         events = [row for row in measurements if row["profile"] == name]
-        assert len(events) == manifest["arguments"]["steps"] == 96
+        assert len(events) == manifest["arguments"]["steps"] == steps
         assert float(events[-1]["equity"]) == pytest.approx(summary["final_equity"])
         assert {
             side: sum(row["action"] == side for row in events)
