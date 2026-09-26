@@ -14,7 +14,7 @@ from pathlib import Path
 from .config import D, Settings
 
 
-def main():
+def main(argv=None):
     p = argparse.ArgumentParser(prog="stonkfly")
     sub = p.add_subparsers(dest="command", required=True)
     prep = sub.add_parser("prepare")
@@ -56,13 +56,18 @@ def main():
         choices=["BTC-USDC", "ETH-USDC", "SOL-USDC"],
     )
     run.add_argument("--neural-ms", type=float, default=500)
+    run.add_argument(
+        "--profiles", type=Path, help="Adjustable feedback config; paper only"
+    )
+    run.add_argument("--profile", default="balanced")
     status = sub.add_parser("status")
     status.add_argument("--out", type=Path, default=Path("runs/paper"))
-    a = p.parse_args()
+    a = p.parse_args(argv)
     from dotenv import load_dotenv
 
     # Never search parent projects for unrelated account credentials.
-    load_dotenv(dotenv_path=Path.cwd() / ".env", override=False)
+    if a.command == "run" and a.live:
+        load_dotenv(dotenv_path=Path.cwd() / ".env", override=False)
     if a.command in ("prepare", "verify"):
         from .data import prepare, verify
 
@@ -98,9 +103,36 @@ def main():
         p.error("Live mode forbids fixtures and fast replay")
     if a.steps < 0:
         p.error("steps cannot be negative")
+    curve = None
+    feedback_config = None
+    learning = not a.frozen
+    if a.profiles:
+        if a.live:
+            p.error("Adjustable feedback profiles are paper-only")
+        from .lab import RewardCurve
+
+        try:
+            profiles = json.loads(a.profiles.read_text())
+            profile = profiles[a.profile]
+            if (
+                set(profile) - {"learning", "curve"}
+                or type(profile.get("learning", True)) is not bool
+            ):
+                raise ValueError("Invalid feedback profile")
+            if a.frozen:
+                raise ValueError("Set learning in the profile instead of --frozen")
+            curve = RewardCurve(**profile.get("curve", {}))
+            learning = profile.get("learning", True)
+            feedback_config = {
+                "name": a.profile,
+                "learning": learning,
+                "curve": dataclasses.asdict(curve),
+            }
+        except (OSError, ValueError, KeyError, TypeError) as e:
+            p.error(f"Invalid profiles: {e}")
     settings = Settings(
         products=tuple(a.products),
-        learning=not a.frozen,
+        learning=learning,
         neural_ms=a.neural_ms,
         pulse_ms=min(200, a.neural_ms),
     )
@@ -182,6 +214,8 @@ def main():
                 if path.suffix in (".py", ".cpp")
             },
         }
+        if feedback_config is not None:
+            provenance["feedback_profile"] = feedback_config
         signature = hashlib.sha256(
             json.dumps(provenance, sort_keys=True).encode()
         ).hexdigest()
@@ -211,7 +245,20 @@ def main():
                 equity, ledger.get("anchor"), settings.reward_deadband
             )
             frame = market_frame(product, market.history[product], q.bid, q.ask)
-            neural = controller.observe(frame, kind)
+            feedback = None
+            if curve is not None:
+                kind, current, relative_return = curve.feedback(
+                    equity, ledger.get("anchor")
+                )
+                feedback = {
+                    "profile": a.profile,
+                    "relative_return": relative_return,
+                    "pulse_current": current,
+                    "stimulus": kind,
+                }
+                neural = controller.observe(frame, kind, pulse_current=current)
+            else:
+                neural = controller.observe(frame, kind)
             # Checkpoint + accounting anchor are committed before any trade.
             # Two slots keep the last committed snapshot safe during a crash.
             slot = ledger.get("tick") % 2
@@ -229,6 +276,8 @@ def main():
                 "market_history": market.history,
                 "fixture_tick": getattr(market, "tick", None),
             }
+            if feedback is not None:
+                observation["feedback"] = feedback
             ledger.commit_tick(equity, checkpoint_info, observation)
             order = {"status": "HOLD"}
             if neural["side"] != "HOLD":
@@ -253,6 +302,14 @@ def main():
                 "neural": neural,
                 "execution": order,
             }
+            # Record the post-fill paper value as well as the pre-decision value.
+            if feedback is not None:
+                row["feedback"] = feedback
+                row["post_execution_equity_usdc"] = str(
+                    ledger.equity(
+                        provider.quotes if order["status"] == "FILLED" else quotes
+                    )
+                )
             with (out / "events.jsonl").open("a") as f:
                 f.write(json.dumps(row, allow_nan=False) + "\n")
                 f.flush()

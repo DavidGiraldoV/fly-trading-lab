@@ -12,6 +12,8 @@ Four profiles replayed the same eight hours of Bitcoin prices. Stronger-loss fee
 
 **Eight market hours = 96 decisions = 48 seconds of simulated neural activity per profile.** Each decision advances the brain by 500 ms; the intervening five market minutes are not simulated continuously. This is one exploratory window, not an out-of-sample learning result. [Results and limitations](results/eight-hour-example/README.md).
 
+For live prices with simulated trades and adjustable feedback, see the [live-paper guide](docs/LIVE-PAPER.md).
+
 ## Try it
 
 From the repository root, with Python 3.11+ and a C++17 compiler (macOS/Linux; 16 GB RAM recommended):

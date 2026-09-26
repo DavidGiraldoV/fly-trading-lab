@@ -401,7 +401,7 @@ def run(args):
     print(f"Report: {args.out / 'REPORT.md'}", flush=True)
 
 
-def main():
+def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
     sub = p.add_subparsers(dest="command", required=True)
     for command in ("fixture", "fetch"):
@@ -420,7 +420,37 @@ def main():
     q.add_argument("--friction", default="0.0005")
     q.add_argument("--order", default="10")
     q.add_argument("--max-exposure", default="0.5")
-    args = p.parse_args()
+    watch = sub.add_parser(
+        "watch", help="Live public prices with simulated trades and adjustable feedback"
+    )
+    watch.add_argument(
+        "--profiles", type=Path, default=Path("experiments/profiles.json")
+    )
+    watch.add_argument("--profile", default="balanced")
+    watch.add_argument("--out", type=Path, required=True)
+    watch.add_argument(
+        "--steps", type=int, default=10, help="Decision count; 0 runs until stopped"
+    )
+    watch.add_argument("--neural-ms", type=float, default=500)
+    args = p.parse_args(argv)
+    if args.command == "watch":
+        from .cli import main as stream
+
+        return stream(
+            [
+                "run",
+                "--profiles",
+                str(args.profiles),
+                "--profile",
+                args.profile,
+                "--out",
+                str(args.out),
+                "--steps",
+                str(args.steps),
+                "--neural-ms",
+                str(args.neural_ms),
+            ]
+        )
     if args.command == "run":
         run(args)
     else:
